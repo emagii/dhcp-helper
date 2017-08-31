@@ -12,3 +12,114 @@ if it is generally useful to others.
 
 
 Simon Kelley  <simon@thekelleys.org.uk>
+
+From: http://amadys.blogspot.se/2010/09/dhcp-helper-dhcp-relay-agent-for-linux.html
+
+dhcp-helper : A DHCP Relay Agent for Linux Home
+
+DHCP Relay Agents are commonly used on routed networks with centralized DHCP services. The relay agent is a service that is Web Directory typically configured on a router and converts DHCP broadcasts into unicast messages directed at the DHCP servers IP address.
+
+dhcp-helper is a simple, straightforward DHCP and BOOTP relay agent which was written by Simon Kelley as alternative to the ISC relay. It's Linux only, but doesn't require any kernel support other than the network stack. (No LPF or packet sockets). It listens for DHCP and BOOTP broadcasts on directly connected subnets and relays them to  DHCP or  BOOTP  servers  elsewhere.
+ It  also relays replies from the remote servers back to  partially  configured  hosts.  Once  hosts  are  fully configured  they can communicate  directly  with their servers and no longer need the services of a relay.
+
+This post will cover the installation and setup of dhcp-helper in Ubuntu. This package has been ported to some other distros as well, so feel free to try it in whatever your distribution is ;).
+
+For installing dhcp-helper in Ubuntu the following command should be executed:
+
+$ sudo apt-get install dhcp-helper
+
+The service starts on installation automatically, listening on interface eth0. 
+You’ll want to configure it in the file /etc/default/dhcp-helper
+
+The only required option is at least one DHCP server to relay  to.  The simplest  way  to configure    dhcp-helper on a router is just to give the interface to the network containing the DHCP server with a  -b  option. All  the  other interfaces present on the machine will then accept DHCP requests. On a machine which does not have an interface on the  network containing the DHCP server, use a -s option instead.
+
+The following options can be used on the dchp-helper configuration file to suit every environment:
+
+
+-s server
+              Specify  a  DHCP  or BOOTP server to relay to. The server may be
+              given as a machine name or dotted-quad IP address. More than one
+              server may be specified.
+-b interface
+
+              Relay to a DHCP or BOOTP server using broadcast via .
+              This eliminates the need to give a server  address.
+              is  automatically added to the list of interfaces which will not
+              receive DHCP requests.
+
+-i interface
+              Specify which local  interfaces  to  listen  on  for  DHCP/BOOTP
+              broadcasts.  If  no  -i  flags are given all interfaces are used
+              except those specified by -e flags and  those  specified  by  -b
+              flags.
+
+-e interface
+              Specify which local interfaces to exclude.
+
+-p    -r file
+              Specify an alternate path for dhcp-helper to record its process-
+              id in. Normally /var/run/dhcp-helper.pid.
+-u username
+              Specify the  userid  to  which  dhcp-helper  will  change  after
+              startup.  The  daemon  must  normally be started as root, but it
+              will drop root priviledges  after  startup  by  changing  id  to
+              another  user.  Normally  this  user is "nobody" but that can be
+              Use  alternative  ports  (1067/1068)  for  the  DHCP  client and server.
+
+-v    
+              Report the software release version and copyright information.
+
+-d    
+              Debug mode, do not change UID, write a pid-file or go  into  the
+              background.
+
+-r file
+              Specify an alternate path for dhcp-helper to record its process-
+              id in. Normally /var/run/dhcp-helper.pid.
+-u username
+              Specify the  userid  to  which  dhcp-helper  will  change  after
+              startup.  The  daemon  must  normally be started as root, but it
+              will drop root priviledges  after  startup  by  changing  id  to
+              another  user.  Normally  this  user is "nobody" but that can be
+
+
+
+
+An example of the content of an /etc/default/dhcp-helper config file could be:
+
+--------------------------------------------------
+# Option flags used to start dhcp-helper.
+
+#
+# You will need at least "-s " or
+# "-b so that dhcp-helper knows where
+# to relay DHCP requests.
+#
+# See "man 8 dhcp-helper" for more details.
+
+DHCPHELPER_OPTS="-b eth1 -e eth0"
+
+--------------------------------------------------
+
+
+In this case the option "-b eth1" is used, because the dhcp server is conected to the eth1
+interface of the Linux box acting as a router between 3 different networks connected to
+eth0, eth1 and eth2 respectively.
+
+The option "-e eth0" is used because we don't want to listen for DHCP or BOOTP broadcast
+on the interface connected to the internet.
+
+Such service is not needed for anyone sitting behind the external interface and this option will also help avoid
+creating security breaches since the daemon will stop listening on the interface specified.
+
+After setting up the options the service needs to be restarted. Use the following command:
+
+$ sudo /etc/init.d/dhcp-helper restart
+
+A nice thing to do now, is to use tcpdump on any of the interfaces involved on the DHCP relay process(eth1 or eth2 if an
+scenario as the one in the picture above is used). You should be able to watch the clients pull an IP address from your DHCP
+server !!!
+
+Note: If you are using iptables on the same Ubuntu box as the dhcp-helper, remember to add an incoming rule that allow the
+box to receive the broadcast from the clients. You will probably also need an outgoing rule that allows the Ubuntu box to talk to the DHCP server.
+
