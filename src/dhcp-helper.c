@@ -17,7 +17,7 @@
 /* Author's email: simon@thekelleys.org.uk */
 
 #define COPYRIGHT "Copyright (C) 2004-2012 Simon Kelley" 
-
+#include "config.h"
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 	  break;
 
 	case 'v':
-	  fprintf(stderr, "dhcp-helper version %s, %s\n", VERSION, COPYRIGHT);
+	  fprintf(stderr, "dhcp-helper version %s, %s\n", PACKAGE_VERSION, COPYRIGHT);
 	  exit(0);
 	  
 	default:
